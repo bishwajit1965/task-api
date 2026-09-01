@@ -1,6 +1,7 @@
 {
   "name": "task-api",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,8 +11,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.9.4"
   }
 }
