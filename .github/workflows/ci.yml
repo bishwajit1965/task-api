@@ -12,6 +12,9 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
 
+    env:
+      MONGO_URI: mongodb://mongodb:27017/task_api
+
     services:
       mongodb:
         image: mongo:8
