@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
-import Task from "../../models/Task.js";
 import mongoose from "mongoose";
+import type { TaskResponse } from "../../../shared/types/taskResponse.js";
+import { createTaskSchema } from "../validators/taskValidator.js";
+
 import {
   findTasksService,
   findTaskByIdService,
@@ -13,14 +15,33 @@ interface CreateTaskBody {
   title: string;
 }
 
-interface TaskResponse {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
 interface TaskQuery {
   completed?: string;
+}
+
+// Create task
+export async function createTask(
+  req: Request<{}, {}, CreateTaskBody>,
+  res: Response,
+): Promise<void> {
+  const body = createTaskSchema.safeParse(req.body);
+
+  if (!body.success) {
+    res.status(400).json({
+      message: body.error.issues[0]?.message || "Invalid request body",
+    });
+    return;
+  }
+
+  const task = await createTaskService(body.data.title);
+
+  const response: TaskResponse = {
+    id: task._id.toString(),
+    title: task.title,
+    completed: task.completed,
+  };
+
+  res.status(201).json(response);
 }
 
 // Get all tasks
@@ -72,31 +93,6 @@ export async function getTaskById(
   }
 
   res.json(task);
-}
-
-// Create task
-export async function createTask(
-  req: Request<{}, {}, CreateTaskBody>,
-  res: Response,
-): Promise<void> {
-  const body = req.body;
-
-  if (typeof body.title !== "string" || body.title.trim() === "") {
-    res.status(400).json({
-      message: "Title is required and must be a non-empty string",
-    });
-    return;
-  }
-
-  const task = await createTaskService(body.title.trim());
-
-  const response: TaskResponse = {
-    id: task._id.toString(),
-    title: task.title,
-    completed: task.completed,
-  };
-
-  res.status(201).json(response);
 }
 
 // Update task

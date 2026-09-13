@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import type { TaskResponse } from "../../shared/types/taskResponse.js";
 import {
   createTask,
   getTasks,
@@ -7,17 +8,13 @@ import {
   deleteTask,
 } from "./services/taskService";
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskResponse[]>([]);
   const [title, setTitle] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     getTasks()
@@ -27,25 +24,54 @@ function App() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timeoutId = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (!error) return;
+
+    const timeoutId = setTimeout(() => {
+      setError(null);
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [error]);
+
   console.log("TASKS", tasks);
   console.log("Editing Id", editingId);
 
   return (
     <div>
       <h1>Task List{tasks?.length ? ` (${tasks.length})` : ""}</h1>
+      <p>{error && <span style={{ color: "red" }}>{error}</span>}</p>
+      <p>
+        {successMessage && (
+          <span style={{ color: "green" }}>{successMessage}</span>
+        )}
+      </p>
       <form
         onSubmit={async (event) => {
           event.preventDefault();
 
-          if (!title.trim()) return;
+          // if (!title.trim()) return;
 
           try {
             const newTask = await createTask(title);
-
+            setSuccessMessage("Task created successfully!");
             setTasks((currentTasks) => [...currentTasks, newTask]);
             setTitle("");
           } catch (error) {
             console.error(error);
+            setError(
+              error instanceof Error ? error.message : "Failed to create task",
+            );
           }
         }}
       >
@@ -81,11 +107,12 @@ function App() {
                             : currentTask,
                         ),
                       );
-
+                      setSuccessMessage("Task updated successfully!");
                       setEditingId(null);
                       setEditingTitle("");
                     } catch (error) {
                       console.error(error);
+                      setError("Failed to update task");
                     }
                   }}
                 >
@@ -116,8 +143,10 @@ function App() {
                           (currentTask) => currentTask.id !== task.id,
                         ),
                       );
+                      setSuccessMessage("Task deleted successfully!");
                     } catch (error) {
                       console.error(error);
+                      setError("Failed to delete task");
                     }
                   }}
                 >

@@ -1,13 +1,8 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+import type { TaskResponse } from "../../../shared/types/taskResponse.js";
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
-export const getTasks = async (): Promise<Task[]> => {
+export const getTasks = async (): Promise<TaskResponse[]> => {
   const response = await fetch(`${API_BASE_URL}/tasks`);
   if (!response.ok) {
     throw new Error("Failed to fetch tasks");
@@ -16,7 +11,7 @@ export const getTasks = async (): Promise<Task[]> => {
   return data;
 };
 
-export const createTask = async (title: string): Promise<Task> => {
+export const createTask = async (title: string): Promise<TaskResponse> => {
   const response = await fetch(`${API_BASE_URL}/tasks`, {
     method: "POST",
     headers: {
@@ -25,7 +20,8 @@ export const createTask = async (title: string): Promise<Task> => {
     body: JSON.stringify({ title }),
   });
   if (!response.ok) {
-    throw new Error("Failed to create task");
+    const error = await response.json();
+    throw new Error(error.message || "Failed to create task");
   }
   const data = await response.json();
   return data;
@@ -33,8 +29,8 @@ export const createTask = async (title: string): Promise<Task> => {
 
 export const updateTask = async (
   id: string,
-  updates: Partial<Task>,
-): Promise<Task> => {
+  updates: Partial<TaskResponse>,
+): Promise<TaskResponse> => {
   const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
     method: "PUT",
     headers: {
