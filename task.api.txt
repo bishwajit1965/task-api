@@ -100,3 +100,404 @@ node dist/src/server/index.js
 START THE CLIENT(FRONTEND)
 ----------------------------
 npm run dev
+
+================================================================================
+
+# CI Integration Guide — GitHub Actions
+
+This guide shows how to integrate **Continuous Integration (CI)** into a Node.js/TypeScript project such as `task-api`.
+
+The goal is simple:
+
+> Whenever code is pushed to GitHub or a pull request is opened, GitHub automatically installs the project, prepares required services, runs the tests, builds the application, and reports whether the project is healthy.
+
+---
+
+## 1. What CI does
+
+Without CI, we manually run:
+
+```bash
+npm test -- --run
+npm run build
+```
+
+With CI, GitHub performs these operations automatically.
+
+```text
+Developer changes code
+        ↓
+      git push
+        ↓
+      GitHub
+        ↓
+   GitHub Actions
+        ↓
+   Install dependencies
+        ↓
+     Run tests
+        ↓
+      Build
+        ↓
+    PASS / FAIL
+```
+
+CI does **not** deploy the application. Deployment belongs to **CD (Continuous Delivery/Deployment)**.
+
+---
+
+# 2. Before integrating CI
+
+The project should already have:
+
+* A GitHub repository
+* A working `package.json`
+* A test framework
+* A build command
+* A working application locally
+
+For our `task-api`:
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/server/index.js",
+    "dev": "nodemon dist/src/server/index.js",
+    "test": "vitest"
+  }
+}
+```
+
+The important commands for CI are:
+
+```bash
+npm test -- --run
+npm run build
+```
+
+### Why `--run`?
+
+Normally Vitest can stay in watch mode.
+
+CI should run the tests once and then exit.
+
+Therefore:
+
+```bash
+npm test -- --run
+```
+
+means:
+
+```text
+Run tests
+    ↓
+Finish
+    ↓
+Return success/failure
+```
+
+---
+
+# 3. Identify external services required by tests
+
+Before writing the workflow, determine whether the tests depend on another service.
+
+Our integration test connects to MongoDB.
+
+Locally:
+
+```text
+task-api
+   ↓
+MongoDB
+```
+
+But GitHub's runner starts as a fresh environment.
+
+It does not automatically have our local MongoDB container.
+
+Therefore CI must provide MongoDB.
+
+GitHub Actions supports this through **service containers**.
+
+---
+
+# 4. Create the workflow directory
+
+At the project root create:
+
+```text
+.github/
+└── workflows/
+```
+
+Then create:
+
+```text
+.github/workflows/ci.yml
+```
+
+The filename can be different, but `.yml` is a common convention.
+
+---
+
+# 5. Define the workflow
+
+Start with:
+
+```yaml
+name: CI
+```
+
+This is the name displayed in GitHub Actions.
+
+---
+
+# 6. Define when CI should run
+
+Add:
+
+```yaml
+on:
+  push:
+  pull_request:
+```
+
+This means:
+
+### `push`
+
+Run CI whenever code is pushed to the repository.
+
+```text
+git push
+   ↓
+GitHub
+   ↓
+CI starts
+```
+
+### `pull_request`
+
+Run CI when a pull request is opened or updated.
+
+This allows GitHub to test proposed changes before they are merged.
+
+---
+
+# 7. Define the CI job
+
+Add:
+
+```yaml
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+```
+
+This creates a job named:
+
+```text
+test-and-build
+```
+
+and tells GitHub to execute it on a fresh Ubuntu runner.
+
+The runner is a temporary machine/environment created for the workflow.
+
+---
+
+# 8. Provide MongoDB
+
+Because `task-api` has an integration test requiring MongoDB, add:
+
+```yaml
+services:
+  mongodb:
+    image: mongo:8
+    ports:
+      - 27017:27017
+```
+
+The complete structure is:
+
+```yaml
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+```
+
+This tells GitHub:
+
+> Start a MongoDB container for this CI job.
+
+The service exists only for the duration of the job.
+
+---
+
+# 9. Checkout the project
+
+The runner initially does not contain our repository files.
+
+Add:
+
+```yaml
+- name: Checkout code
+  uses: actions/checkout@v4
+```
+
+This retrieves the repository code into the runner.
+
+---
+
+# 10. Install the required Node.js version
+
+Add:
+
+```yaml
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: 22
+```
+
+This prepares Node.js 22 for the project.
+
+---
+
+# 11. Install dependencies
+
+Add:
+
+```yaml
+- name: Install dependencies
+  run: npm ci
+```
+
+Use `npm ci` in CI rather than `npm install`.
+
+`npm ci` performs a clean, reproducible installation using the project's lockfile.
+
+---
+
+# 12. Run the tests
+
+Add:
+
+```yaml
+- name: Run tests
+  run: npm test -- --run
+```
+
+This executes the same test suite we verified locally.
+
+Because MongoDB is running as a service, the integration test can connect to it.
+
+---
+
+# 13. Build the application
+
+Finally:
+
+```yaml
+- name: Build
+  run: npm run build
+```
+
+This executes:
+
+```bash
+tsc
+```
+
+and verifies that the TypeScript application can successfully compile.
+
+---
+
+# 14. Complete CI workflow
+
+The final file is:
+
+```yaml
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
+```
+
+Save it as:
+
+```text
+.github/workflows/ci.yml
+```
+
+---
+
+# 15. Commit and push the workflow
+
+The workflow itself must exist in the GitHub repository before GitHub can execute it.
+
+After adding the file:
+
+```bash
+git add .
+git commit -m "Add CI workflow"
+git push
+```
+
+The push creates the GitHub event that activates the workflow.
+
+```text
+Local project
+     ↓
+git push
+     ↓
+GitHub repository
+     ↓
+GitHub detects push
+     ↓
+.github/workflows/ci.yml
+     ↓
+GitHub Actions starts
+```
+
+---
+
+# 16. Wat
