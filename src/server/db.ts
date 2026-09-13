@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 export const connectDB = async (): Promise<void> => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/task_api");
+    await mongoose.connect("mongodb://task-api-mongodb:27017/task_api");
+    // await mongoose.connect("mongodb://127.0.0.1:27017/task_api");
     console.log("Connected to MongoDB!");
   } catch (error) {
     console.error("Error connecting to the database:", error);
