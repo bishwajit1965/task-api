@@ -26,8 +26,8 @@ jobs:
       - name: Build
         run: npm run build
 
-services:
-  mongodb:
-    image: mongo:8
-    ports:
-      - 27017:27017
+  services:
+    mongodb:
+      image: mongo:8
+      ports:
+        - 27017:27017
