@@ -60,8 +60,6 @@ function App() {
         onSubmit={async (event) => {
           event.preventDefault();
 
-          // if (!title.trim()) return;
-
           try {
             const newTask = await createTask(title);
             setSuccessMessage("Task created successfully!");
