@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MONGO_URI: mongodb://mongodb:27017/task_api
+      MONGO_URI: MONGO_URI: mongodb://127.0.0.1:27017/task_api
 
     services:
       mongodb:
