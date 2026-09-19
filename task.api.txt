@@ -497,8 +497,19 @@ GitHub detects push
      ↓
 GitHub Actions starts
 ```
-
 ---
+
+
+==============================
+LOCAL DEVELOPMENT BACKEND
+==============================
+task-api => npm run dev
+
+==============================
+LOCAL DEVELOPMENT FRONTEND
+==============================
+cd client => npm run dev
+
 
 
 ==============================
