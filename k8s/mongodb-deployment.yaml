@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: task-api-mongodb
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: task-api-mongodb
+
+  template:
+    metadata:
+      labels:
+        app: task-api-mongodb
+
+    spec:
+      containers:
+        - name: mongo
+          image: mongo
+          imagePullPolicy: IfNotPresent

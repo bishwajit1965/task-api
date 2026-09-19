@@ -196,21 +196,21 @@ export async function deleteTask(req: Request, res: Response): Promise<void> {
 //   res.status(201).json(newTask);
 // }
 
-// // export function createTask(
-// //   req: Request,
-// //   res: Response
-// // ): void {
-// //   const body = req.body as CreateTaskBody;
+// export function createTask(
+//   req: Request,
+//   res: Response
+// ): void {
+//   const body = req.body as CreateTaskBody;
 
-// //   const newTask: Task = {
-// //     id: tasks.length + 1,
-// //     title: body.title,
-// //   };
+//   const newTask: Task = {
+//     id: tasks.length + 1,
+//     title: body.title,
+//   };
 
-// //   tasks.push(newTask);
+//   tasks.push(newTask);
 
-// //   res.status(201).json(newTask);
-// // }
+//   res.status(201).json(newTask);
+// }
 
 // export function updateTask(req: Request, res: Response): void {
 //   const id = Number(req.params.id);

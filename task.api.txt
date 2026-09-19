@@ -500,4 +500,19 @@ GitHub Actions starts
 
 ---
 
-# 16. Wat
+
+==============================
+Site Vercel front end link:
+==============================
+https://task-api-sooty-ten.vercel.app
+
+
+==============================
+Site Render Back end link
+==============================
+https://task-api-ce9l.onrender.com/api
+
+https://task-api-ce9l.onrender.com/api/tasks  || GET   ====> will fetch all the tasks
+
+
+
