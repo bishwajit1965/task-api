@@ -48,6 +48,10 @@ button {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6366f1;
+  border: 1px solid #8aa9ea;
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 4px;
 }
 
 .task-header h1 {
